@@ -1,0 +1,34 @@
+networks:
+  default:
+    external:
+      name: rabbitmq_default
+
+services:
+  
+  web-ui:
+    build:
+      context: .
+      dockerfile: build_ui/Dockerfile
+    networks:
+      - rabbitmq_default
+    volumes:
+      - ./celeryviz/static:/  # Mount the static folder to the root of the container
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: unless-stopped
+    networks:
+      - rabbitmq_default
+    ports:
+      - "5672:5672"   # RabbitMQ default AMQP port
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: $RABBITMQ_USER:user
+      RABBITMQ_DEFAULT_PASS: $RABBITMQ_PASS:password
+    depends_on:
+      - web-ui
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  rabbitmq_data:
